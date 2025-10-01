@@ -1,0 +1,13 @@
+# Ignore everything inside the Arduino folder
+Arduino/**
+
+# Except for this sub folder
+!Arduino/MouseEmulator/
+
+# And its contents
+!Arduino/MouseEmulator/**
+
+# common files
+*.bak
+*.url
+**/.theia/**
