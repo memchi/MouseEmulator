@@ -6,6 +6,7 @@
   WARNING: When you use the Mouse.move() command, the Arduino takes over your
   mouse! Make sure you have control before you use the mouse commands.
   https://docs.arduino.cc/built-in-examples/usb/KeyboardAndMouseControl/
+  https://docs.arduino.cc/language-reference/en/functions/usb/Mouse/
   --------------------------------------------------------------------------- */
 #if not defined(ARDUINO_AVR_MICRO)
 #error "only for ARDUINO_AVR_MICRO"
@@ -16,28 +17,30 @@
 // -----------------------------------------------------------------------------
 // replace tracing
 #ifndef TRACESTART
-#define TRACESTART(Level, baud) {}
-#define TRACE(Level, PosInFunction, ...) {}
+#define TRACESTART(Level, baud) \
+  {}
+#define TRACE(Level, PosInFunction, ...) \
+  {}
 #endif
 // -----------------------------------------------------------------------------
 #define SWITCH_INPUT 4
 // -----------------------------------------------------------------------------
-#define MOVE_UPPER_LEFT_X -640 // in mickeys (not a const factor to pixels, could be accelerated)
-#define MOVE_UPPER_LEFT_Y -480
-#define CLICK_OVERVIEW_X 100
-#define CLICK_OVERVIEW_Y 50
-#define CLICK_UTILITIES_X 670
-#define CLICK_UTILITIES_Y 50
-#define CLICK_CONFIGURATION_X 290
-#define CLICK_CONFIGURATION_Y 190
-#define CLICK_CLOSE_X 650
-#define CLICK_CLOSE_Y 400
+#define TO_ORIGIN_X -640  // in mickeys (not a const factor to pixels, could be accelerated)
+#define TO_ORIGIN_Y -480
+#define FROM_ORIGIN_TO_OVERVIEW_X 105
+#define FROM_ORIGIN_TO_OVERVIEW_Y 55
+#define FROM_OVERVIEW_TO_UTILITIES_X 570
+#define FROM_OVERVIEW_TO_UTILITIES_Y 0
+#define FROM_UTILITIES_TO_CONFIGURATION_X -385
+#define FROM_UTILITIES_TO_CONFIGURATION_Y 140
+#define FROM_CONFIGURATION_TO_CLOSE_X 400
+#define FROM_CONFIGURATION_TO_CLOSE_Y 200
+//#define FROM_CLOSE_TO_OVERVIEW_X -FROM_OVERVIEW_TO_UTILITIES_X - FROM_UTILITIES_TO_CONFIGURATION_X - FROM_CONFIGURATION_TO_CLOSE_X + 200
+//#define FROM_CLOSE_TO_OVERVIEW_Y -FROM_OVERVIEW_TO_UTILITIES_Y - FROM_UTILITIES_TO_CONFIGURATION_Y - FROM_CONFIGURATION_TO_CLOSE_Y
 #define MOUSE_STEP_PIXELS 10
 #define MILLISEC_PER_MOUSE_STEP 100
 // -----------------------------------------------------------------------------
 bool bFirstRound = true;
-int_fast16_t x_absolute = 0;
-int_fast16_t y_absolute = 0;
 // -----------------------------------------------------------------------------
 void MouseMove16(int_fast16_t x, int_fast16_t y) {
   TRACE(tlDEBUG, pfSTART, "");
@@ -83,23 +86,6 @@ void MouseMove16(int_fast16_t x, int_fast16_t y) {
   digitalWrite(LED_BUILTIN, LOW);
 }
 // -----------------------------------------------------------------------------
-void MouseMoveOrigin() {
-  TRACE(tlINFO, pfNONE, "--------------------------------------------------------------------------------");
-  MouseMove16(MOVE_UPPER_LEFT_X, MOVE_UPPER_LEFT_Y);  // move upper left
-  x_absolute = 0;
-  y_absolute = 0;
-}
-// -----------------------------------------------------------------------------
-void MouseMoveAbsolute(int_fast16_t x, int_fast16_t y) {
-  TRACE(tlINFO, pfNONE, "--------------------------------------------------------------------------------");
-  TRACE(tlINFO, pfNONE, "x: %d, y: %d", x, y);
-  TRACE(tlINFO, pfNONE, "x_absolute: %d, y_absolute: %d", x_absolute, y_absolute);
-  MouseMove16(x - x_absolute, y - y_absolute);
-  x_absolute = x;
-  y_absolute = y;
-  TRACE(tlINFO, pfNONE, "x_absolute: %d, y_absolute: %d", x_absolute, y_absolute);
-}
-// -----------------------------------------------------------------------------
 void setup() {
   //TRACESTART(tlWARNING, 115200);
   TRACESTART(tlINFO, 115200);
@@ -115,21 +101,26 @@ void loop() {
   TRACE(tlDEBUG, pfSTART, "");
   if (!digitalRead(SWITCH_INPUT)) {
     if (bFirstRound) {
-      MouseMoveOrigin();
+      MouseMove16(TO_ORIGIN_X, TO_ORIGIN_Y);
       bFirstRound = false;
-    }
-    MouseMoveAbsolute(CLICK_OVERVIEW_X, CLICK_OVERVIEW_Y);  // move to overview tab
-    delay(1000);
-    //Mouse.click(MOUSE_LEFT);
-    MouseMoveAbsolute(CLICK_UTILITIES_X, CLICK_UTILITIES_Y);  // move to utilties tab
-    delay(1000);
-    //Mouse.click(MOUSE_LEFT);
-    MouseMoveAbsolute(CLICK_CONFIGURATION_X, CLICK_CONFIGURATION_Y);  // move to configuration button
-    delay(1000);
-    //Mouse.click(MOUSE_LEFT);
-    MouseMoveAbsolute(CLICK_CLOSE_X, CLICK_CLOSE_Y);  // move to close button
-    delay(1000);
-    //Mouse.click(MOUSE_LEFT);
+      MouseMove16(FROM_ORIGIN_TO_OVERVIEW_X, FROM_ORIGIN_TO_OVERVIEW_Y);
+    } else {
+      //MouseMove16(FROM_CLOSE_TO_OVERVIEW_X, FROM_CLOSE_TO_OVERVIEW_Y);
+      MouseMove16(-FROM_CONFIGURATION_TO_CLOSE_X, -FROM_CONFIGURATION_TO_CLOSE_Y);
+      MouseMove16(-FROM_UTILITIES_TO_CONFIGURATION_X, -FROM_UTILITIES_TO_CONFIGURATION_Y);
+      MouseMove16(-FROM_OVERVIEW_TO_UTILITIES_X, -FROM_OVERVIEW_TO_UTILITIES_Y);
+    };
+    delay(100);
+    Mouse.click(MOUSE_LEFT);
+    MouseMove16(FROM_OVERVIEW_TO_UTILITIES_X, FROM_OVERVIEW_TO_UTILITIES_Y);
+    delay(100);
+    Mouse.click(MOUSE_LEFT);
+    MouseMove16(FROM_UTILITIES_TO_CONFIGURATION_X, FROM_UTILITIES_TO_CONFIGURATION_Y);
+    delay(100);
+    Mouse.click(MOUSE_LEFT);
+    MouseMove16(FROM_CONFIGURATION_TO_CLOSE_X, FROM_CONFIGURATION_TO_CLOSE_Y);
+    delay(100);
+    Mouse.click(MOUSE_LEFT);
   } else {
     bFirstRound = true;
   }

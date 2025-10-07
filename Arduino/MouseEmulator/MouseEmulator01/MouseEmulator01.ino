@@ -15,10 +15,18 @@
 #include "Mouse.h"
 #include "Tracing.h"
 // -----------------------------------------------------------------------------
+// replace tracing
+#ifndef TRACESTART
+#define TRACESTART(Level, baud) \
+  {}
+#define TRACE(Level, PosInFunction, ...) \
+  {}
+#endif
+// -----------------------------------------------------------------------------
 #define SWITCH_INPUT 4
 // -----------------------------------------------------------------------------
-#define MOVE_UPPER_LEFT_X -640 // in mickeys (not a const factor to pixels, could be accelerated)
-#define MOVE_UPPER_LEFT_Y -480
+#define TO_ORIGIN_X -640 // in mickeys (not a const factor to pixels, could be accelerated)
+#define TO_ORIGIN_Y -480
 #define RECTANGLE_X_SIZE_HALF 50
 #define RECTANGLE_Y_SIZE_HALF 50
 //#define MAX_COUNT 5
@@ -26,9 +34,6 @@
 //uint16_t uCount = 0;
 #define MOUSE_STEP_PIXELS 10
 #define MILLISEC_PER_MOUSE_STEP 100
-// -----------------------------------------------------------------------------
-int_fast16_t x_absolute = 0;
-int_fast16_t y_absolute = 0;
 // -----------------------------------------------------------------------------
 void MouseMove16(int_fast16_t x, int_fast16_t y) {
   TRACE(tlDEBUG, pfSTART, "");
@@ -74,37 +79,20 @@ void MouseMove16(int_fast16_t x, int_fast16_t y) {
   digitalWrite(LED_BUILTIN, LOW);
 }
 // -----------------------------------------------------------------------------
-void MouseMoveOrigin() {
-  TRACE(tlINFO, pfNONE, "--------------------------------------------------------------------------------");
-  MouseMove16(MOVE_UPPER_LEFT_X, MOVE_UPPER_LEFT_Y);  // move upper left
-  x_absolute = 0;
-  y_absolute = 0;
-}
-// -----------------------------------------------------------------------------
-void MouseMoveAbsolute(int_fast16_t x, int_fast16_t y) {
-  TRACE(tlINFO, pfNONE, "--------------------------------------------------------------------------------");
-  TRACE(tlINFO, pfNONE, "x: %d, y: %d", x, y);
-  TRACE(tlINFO, pfNONE, "x_absolute: %d, y_absolute: %d", x_absolute, y_absolute);
-  MouseMove16(x - x_absolute, y - y_absolute);
-  x_absolute = x;
-  y_absolute = y;
-  TRACE(tlINFO, pfNONE, "x_absolute: %d, y_absolute: %d", x_absolute, y_absolute);
-}
-// -----------------------------------------------------------------------------
 void setup() {
   //TRACESTART(tlWARNING, 115200);
   TRACESTART(tlINFO, 115200);
   //TRACESTART(tlDEBUG, 115200);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(SWITCH_INPUT, INPUT_PULLUP);
+  Mouse.begin();
+  delay(1000);
   TRACE(tlDEBUG, pfEND, "");
 }
 // -----------------------------------------------------------------------------
 void loop() {
   TRACE(tlDEBUG, pfSTART, "");
-  //TRACE(tlINFO, pfNONE, "Dist: %d mm", 123);
   if (!digitalRead(SWITCH_INPUT)) {
-    Mouse.begin();
     delay(500);
     MouseMoveAbsolute(RECTANGLE_X_SIZE_HALF * 2, RECTANGLE_Y_SIZE_HALF * 1);
     delay(500);
@@ -121,8 +109,6 @@ void loop() {
     MouseMoveAbsolute(RECTANGLE_X_SIZE_HALF * 1, RECTANGLE_Y_SIZE_HALF * 3);
     delay(500);
     MouseMoveAbsolute(RECTANGLE_X_SIZE_HALF * 1, RECTANGLE_Y_SIZE_HALF * 2);
-    delay(500);
-    Mouse.end();
   }
   delay(500);
   TRACE(tlDEBUG, pfEND, "");
