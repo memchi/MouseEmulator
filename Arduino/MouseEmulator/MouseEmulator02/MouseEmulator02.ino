@@ -35,12 +35,11 @@
 #define FROM_UTILITIES_TO_CONFIGURATION_Y 140
 #define FROM_CONFIGURATION_TO_CLOSE_X 400
 #define FROM_CONFIGURATION_TO_CLOSE_Y 200
-//#define FROM_CLOSE_TO_OVERVIEW_X -FROM_OVERVIEW_TO_UTILITIES_X - FROM_UTILITIES_TO_CONFIGURATION_X - FROM_CONFIGURATION_TO_CLOSE_X + 200
-//#define FROM_CLOSE_TO_OVERVIEW_Y -FROM_OVERVIEW_TO_UTILITIES_Y - FROM_UTILITIES_TO_CONFIGURATION_Y - FROM_CONFIGURATION_TO_CLOSE_Y
 #define MOUSE_STEP_PIXELS 10
-#define MILLISEC_PER_MOUSE_STEP 100
+#define MILLISEC_PER_MOUSE_STEP 25
+#define CALIBRATE_EVERY 20
 // -----------------------------------------------------------------------------
-bool bFirstRound = true;
+uint_fast16_t uRoundSinceCalibration = 0;
 // -----------------------------------------------------------------------------
 void MouseMove16(int_fast16_t x, int_fast16_t y) {
   TRACE(tlDEBUG, pfSTART, "");
@@ -100,12 +99,14 @@ void setup() {
 void loop() {
   TRACE(tlDEBUG, pfSTART, "");
   if (!digitalRead(SWITCH_INPUT)) {
-    if (bFirstRound) {
+    if (uRoundSinceCalibration >= CALIBRATE_EVERY) {
+      uRoundSinceCalibration = 0;
+    }
+    if (uRoundSinceCalibration == 0) {
+      // calibrate with moving further than upper left
       MouseMove16(TO_ORIGIN_X, TO_ORIGIN_Y);
-      bFirstRound = false;
       MouseMove16(FROM_ORIGIN_TO_OVERVIEW_X, FROM_ORIGIN_TO_OVERVIEW_Y);
     } else {
-      //MouseMove16(FROM_CLOSE_TO_OVERVIEW_X, FROM_CLOSE_TO_OVERVIEW_Y);
       MouseMove16(-FROM_CONFIGURATION_TO_CLOSE_X, -FROM_CONFIGURATION_TO_CLOSE_Y);
       MouseMove16(-FROM_UTILITIES_TO_CONFIGURATION_X, -FROM_UTILITIES_TO_CONFIGURATION_Y);
       MouseMove16(-FROM_OVERVIEW_TO_UTILITIES_X, -FROM_OVERVIEW_TO_UTILITIES_Y);
@@ -121,9 +122,10 @@ void loop() {
     MouseMove16(FROM_CONFIGURATION_TO_CLOSE_X, FROM_CONFIGURATION_TO_CLOSE_Y);
     delay(100);
     Mouse.click(MOUSE_LEFT);
+    uRoundSinceCalibration = uRoundSinceCalibration + 1;
   } else {
-    bFirstRound = true;
-  }
+    uRoundSinceCalibration = 0;
+  }delay(100);
   TRACE(tlDEBUG, pfEND, "");
 }
 // -----------------------------------------------------------------------------
