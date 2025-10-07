@@ -2,14 +2,14 @@
   (C) Copyright by the respective owner
   ------------------------------------------------------------------------------
   Controls the mouse from an Arduino Leonardo, Micro or Due.
-  The mouse movement is always relative. 
+  The mouse movement is always relative.
   WARNING: When you use the Mouse.move() command, the Arduino takes over your
   mouse! Make sure you have control before you use the mouse commands.
   https://docs.arduino.cc/built-in-examples/usb/KeyboardAndMouseControl/
   https://docs.arduino.cc/language-reference/en/functions/usb/Mouse/
   --------------------------------------------------------------------------- */
 #if not defined(ARDUINO_AVR_MICRO)
-#error "only for ARDUINO_AVR_MICRO"
+  #error "only for ARDUINO_AVR_MICRO"
 #endif
 // -----------------------------------------------------------------------------
 #include "Mouse.h"
