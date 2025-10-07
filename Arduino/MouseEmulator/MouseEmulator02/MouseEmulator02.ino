@@ -15,7 +15,7 @@
 #include "Mouse.h"
 //#include "Tracing.h"
 // -----------------------------------------------------------------------------
-// replace tracing
+// replace tracing if tracing is not need or disturbing
 #ifndef TRACESTART
 #define TRACESTART(Level, baud) \
   {}
@@ -23,7 +23,7 @@
   {}
 #endif
 // -----------------------------------------------------------------------------
-#define SWITCH_INPUT 4
+#define SWITCH_INPUT 4  // port where to switch functionality on (PULL to ground)
 // -----------------------------------------------------------------------------
 #define TO_ORIGIN_X -640  // in mickeys (not a const factor to pixels, could be accelerated)
 #define TO_ORIGIN_Y -480
@@ -35,12 +35,15 @@
 #define FROM_UTILITIES_TO_CONFIGURATION_Y 140
 #define FROM_CONFIGURATION_TO_CLOSE_X 400
 #define FROM_CONFIGURATION_TO_CLOSE_Y 200
+// speed settings
 #define MOUSE_STEP_PIXELS 10
 #define MILLISEC_PER_MOUSE_STEP 25
+// calibrate sometimes to origin
 #define CALIBRATE_EVERY 20
 // -----------------------------------------------------------------------------
 uint_fast16_t uRoundSinceCalibration = 0;
 // -----------------------------------------------------------------------------
+// original Mouse.move only uses signed char (+- 127), MouseMove16 provides int_fast16_t (+- 32k)
 void MouseMove16(int_fast16_t x, int_fast16_t y) {
   TRACE(tlDEBUG, pfSTART, "");
   TRACE(tlINFO, pfNONE, "x: %d, y: %d", x, y);
@@ -107,6 +110,7 @@ void loop() {
       MouseMove16(TO_ORIGIN_X, TO_ORIGIN_Y);
       MouseMove16(FROM_ORIGIN_TO_OVERVIEW_X, FROM_ORIGIN_TO_OVERVIEW_Y);
     } else {
+      // move same path backwards to avoid misalignement with acceleration
       MouseMove16(-FROM_CONFIGURATION_TO_CLOSE_X, -FROM_CONFIGURATION_TO_CLOSE_Y);
       MouseMove16(-FROM_UTILITIES_TO_CONFIGURATION_X, -FROM_UTILITIES_TO_CONFIGURATION_Y);
       MouseMove16(-FROM_OVERVIEW_TO_UTILITIES_X, -FROM_OVERVIEW_TO_UTILITIES_Y);
@@ -125,7 +129,8 @@ void loop() {
     uRoundSinceCalibration = uRoundSinceCalibration + 1;
   } else {
     uRoundSinceCalibration = 0;
-  }delay(100);
+  }
+  delay(100);
   TRACE(tlDEBUG, pfEND, "");
 }
 // -----------------------------------------------------------------------------
