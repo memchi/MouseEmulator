@@ -14,14 +14,7 @@
 // -----------------------------------------------------------------------------
 #include "Mouse.h"
 //#include "Tracing.h"
-// -----------------------------------------------------------------------------
-// replace tracing if tracing is not need or disturbing
-#ifndef TRACESTART
-#define TRACESTART(Level, baud) \
-  {}
-#define TRACE(Level, PosInFunction, ...) \
-  {}
-#endif
+#include "TracingStub.h"
 // -----------------------------------------------------------------------------
 #define SWITCH_INPUT 4  // port where to switch functionality on (PULL to ground)
 // -----------------------------------------------------------------------------
