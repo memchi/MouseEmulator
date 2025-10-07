@@ -6,6 +6,7 @@
   WARNING: When you use the Mouse.move() command, the Arduino takes over your
   mouse! Make sure you have control before you use the mouse commands.
   https://docs.arduino.cc/built-in-examples/usb/KeyboardAndMouseControl/
+  https://docs.arduino.cc/language-reference/en/functions/usb/Mouse/
   --------------------------------------------------------------------------- */
 #if not defined(ARDUINO_AVR_MICRO)
 #error "only for ARDUINO_AVR_MICRO"
@@ -16,17 +17,21 @@
 // -----------------------------------------------------------------------------
 #define SWITCH_INPUT 4
 // -----------------------------------------------------------------------------
-#define RECTANGLE_X_SIZE_HALF 200
-#define RECTANGLE_Y_SIZE_HALF 100
+#define MOVE_UPPER_LEFT_X -640 // in mickeys (not a const factor to pixels, could be accelerated)
+#define MOVE_UPPER_LEFT_Y -480
+#define RECTANGLE_X_SIZE_HALF 50
+#define RECTANGLE_Y_SIZE_HALF 50
 //#define MAX_COUNT 5
 //#define MOVE_LEFT_TOP 2000
 //uint16_t uCount = 0;
-#define MOUSE_STEP_PIXELS 25
+#define MOUSE_STEP_PIXELS 10
 #define MILLISEC_PER_MOUSE_STEP 100
+// -----------------------------------------------------------------------------
+int_fast16_t x_absolute = 0;
+int_fast16_t y_absolute = 0;
 // -----------------------------------------------------------------------------
 void MouseMove16(int_fast16_t x, int_fast16_t y) {
   TRACE(tlDEBUG, pfSTART, "");
-  TRACE(tlINFO, pfNONE, "--------------------------------------------------------------------------------");
   TRACE(tlINFO, pfNONE, "x: %d, y: %d", x, y);
   int_fast16_t x_moved = 0;
   int_fast16_t y_moved = 0;
@@ -69,14 +74,29 @@ void MouseMove16(int_fast16_t x, int_fast16_t y) {
   digitalWrite(LED_BUILTIN, LOW);
 }
 // -----------------------------------------------------------------------------
+void MouseMoveOrigin() {
+  TRACE(tlINFO, pfNONE, "--------------------------------------------------------------------------------");
+  MouseMove16(MOVE_UPPER_LEFT_X, MOVE_UPPER_LEFT_Y);  // move upper left
+  x_absolute = 0;
+  y_absolute = 0;
+}
+// -----------------------------------------------------------------------------
+void MouseMoveAbsolute(int_fast16_t x, int_fast16_t y) {
+  TRACE(tlINFO, pfNONE, "--------------------------------------------------------------------------------");
+  TRACE(tlINFO, pfNONE, "x: %d, y: %d", x, y);
+  TRACE(tlINFO, pfNONE, "x_absolute: %d, y_absolute: %d", x_absolute, y_absolute);
+  MouseMove16(x - x_absolute, y - y_absolute);
+  x_absolute = x;
+  y_absolute = y;
+  TRACE(tlINFO, pfNONE, "x_absolute: %d, y_absolute: %d", x_absolute, y_absolute);
+}
+// -----------------------------------------------------------------------------
 void setup() {
   //TRACESTART(tlWARNING, 115200);
   TRACESTART(tlINFO, 115200);
   //TRACESTART(tlDEBUG, 115200);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(SWITCH_INPUT, INPUT_PULLUP);
-  delay(5000);
-  Mouse.begin();
   TRACE(tlDEBUG, pfEND, "");
 }
 // -----------------------------------------------------------------------------
@@ -84,22 +104,25 @@ void loop() {
   TRACE(tlDEBUG, pfSTART, "");
   //TRACE(tlINFO, pfNONE, "Dist: %d mm", 123);
   if (!digitalRead(SWITCH_INPUT)) {
-    MouseMove16(RECTANGLE_X_SIZE_HALF, 0);
+    Mouse.begin();
     delay(500);
-    MouseMove16(RECTANGLE_X_SIZE_HALF, RECTANGLE_Y_SIZE_HALF);
+    MouseMoveAbsolute(RECTANGLE_X_SIZE_HALF * 2, RECTANGLE_Y_SIZE_HALF * 1);
     delay(500);
-    MouseMove16(0, RECTANGLE_Y_SIZE_HALF);
+    MouseMoveAbsolute(RECTANGLE_X_SIZE_HALF * 3, RECTANGLE_Y_SIZE_HALF * 1);
     delay(500);
-    MouseMove16(-RECTANGLE_X_SIZE_HALF, RECTANGLE_Y_SIZE_HALF);
+    MouseMoveAbsolute(RECTANGLE_X_SIZE_HALF * 4, RECTANGLE_Y_SIZE_HALF * 2);
     delay(500);
-    MouseMove16(-RECTANGLE_X_SIZE_HALF, 0);
+    MouseMoveAbsolute(RECTANGLE_X_SIZE_HALF * 4, RECTANGLE_Y_SIZE_HALF * 3);
     delay(500);
-    MouseMove16(-RECTANGLE_X_SIZE_HALF, -RECTANGLE_Y_SIZE_HALF);
+    MouseMoveAbsolute(RECTANGLE_X_SIZE_HALF * 3, RECTANGLE_Y_SIZE_HALF * 4);
     delay(500);
-    MouseMove16(0, -RECTANGLE_Y_SIZE_HALF);
+    MouseMoveAbsolute(RECTANGLE_X_SIZE_HALF * 2, RECTANGLE_Y_SIZE_HALF * 4);
     delay(500);
-    MouseMove16(RECTANGLE_X_SIZE_HALF, -RECTANGLE_Y_SIZE_HALF);
+    MouseMoveAbsolute(RECTANGLE_X_SIZE_HALF * 1, RECTANGLE_Y_SIZE_HALF * 3);
     delay(500);
+    MouseMoveAbsolute(RECTANGLE_X_SIZE_HALF * 1, RECTANGLE_Y_SIZE_HALF * 2);
+    delay(500);
+    Mouse.end();
   }
   delay(500);
   TRACE(tlDEBUG, pfEND, "");
